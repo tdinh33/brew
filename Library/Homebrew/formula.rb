@@ -78,11 +78,6 @@ class Formula
   extend Attrable
   extend APIHashable
 
-  SUPPORTED_NETWORK_ACCESS_PHASES = [:build, :test, :postinstall].freeze
-  private_constant :SUPPORTED_NETWORK_ACCESS_PHASES
-  DEFAULT_NETWORK_ACCESS_ALLOWED = true
-  private_constant :DEFAULT_NETWORK_ACCESS_ALLOWED
-
   # The name of this {Formula}.
   # e.g. `this-formula`
   #
@@ -1557,11 +1552,18 @@ class Formula
   # @param phase [Symbol] the phase to check
   # @return [Boolean]
   # @see .allow_in_sandbox
+  sig { params(type: Symbol, phase: Symbol).returns(T::Boolean) }
   def allowed_in_sandbox?(type, phase:)
+    raise ArgumentError, "Unknown phase: #{phase}" unless Sandbox::SANDBOX_DSL_PHASES.include?(phase)
+
     return false unless self.class.allowed_in_sandbox
     return false unless self.class.allowed_in_sandbox.key?(phase)
 
-    self.class.allowed_in_sandbox[phase].include?(type)
+    allowed = self.class.allowed_in_sandbox[phase].include?(type)
+    return allowed if type != :network
+
+    env_var = Homebrew::EnvConfig.send(:"formula_#{phase}_network")
+    env_var.nil? ? allowed : env_var == "allow"
   end
 
   sig { returns(T::Boolean) }
@@ -3254,9 +3256,7 @@ class Formula
         @skip_clean_paths = Set.new
         @link_overwrite_paths = Set.new
         @loaded_from_api = false
-        @network_access_allowed = SUPPORTED_NETWORK_ACCESS_PHASES.to_h do |phase|
-          [phase, DEFAULT_NETWORK_ACCESS_ALLOWED]
-        end
+        @allowed_in_sandbox = {}
       end
     end
 
@@ -3387,16 +3387,8 @@ class Formula
     # @!attribute [w] allow_network_access!
     sig { params(phases: T.any(Symbol, T::Array[Symbol])).void }
     def allow_network_access!(phases = [])
-      phases_array = Array(phases)
-      if phases_array.empty?
-        @network_access_allowed.each_key { |phase| @network_access_allowed[phase] = true }
-      else
-        phases_array.each do |phase|
-          raise ArgumentError, "Unknown phase: #{phase}" unless SUPPORTED_NETWORK_ACCESS_PHASES.include?(phase)
-
-          @network_access_allowed[phase] = true
-        end
-      end
+      # TODO: uncomment for Homebrew 3.4.0
+      # odeprecated "`allow_network_access!`", "`allow_in_sandbox! :network`"
     end
 
     # The phases for which network access is denied. By default, network
@@ -3419,27 +3411,11 @@ class Formula
     # ```
     #
     # @!attribute [w] deny_network_access!
-    sig { params(phases: T.any(Symbol, T::Array[Symbol])).void }
-    def deny_network_access!(phases = [])
-      phases_array = Array(phases)
-      if phases_array.empty?
-        @network_access_allowed.each_key { |phase| @network_access_allowed[phase] = false }
-      else
-        phases_array.each do |phase|
-          raise ArgumentError, "Unknown phase: #{phase}" unless SUPPORTED_NETWORK_ACCESS_PHASES.include?(phase)
-
-          @network_access_allowed[phase] = false
-        end
-      end
-    end
-
-    # Whether the specified phase should be forced offline.
-    sig { params(phase: Symbol).returns(T::Boolean) }
-    def network_access_allowed?(phase)
-      raise ArgumentError, "Unknown phase: #{phase}" unless SUPPORTED_NETWORK_ACCESS_PHASES.include?(phase)
-
-      env_var = Homebrew::EnvConfig.send(:"formula_#{phase}_network")
-      env_var.nil? ? @network_access_allowed[phase] : env_var == "allow"
+    sig { params(phases: T.nilable(T.any(Symbol, T::Array[Symbol]))).void }
+    def deny_network_access!(phases = nil)
+      # TODO: uncomment for Homebrew 3.4.0
+      # odeprecated "`deny_network_access!`"
+      allow_in_sandbox! :network, phase: phases
     end
 
     # The homepage for the software. Used by users to get more information
@@ -4337,6 +4313,7 @@ class Formula
     # ```ruby
     # allow_in_sandbox! :write_to_temp, :signal, phase: [:test, :install]
     # ```
+    sig { params(types: Symbol, phase: T.nilable(T.any(Symbol, T::Array[Symbol]))).void }
     def allow_in_sandbox!(*types, phase: nil)
       invalid_types = types.select { |type| Sandbox::SANDBOX_DSL_RULES.exclude?(type) }
       if invalid_types.any?

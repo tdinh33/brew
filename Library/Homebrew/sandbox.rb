@@ -11,7 +11,7 @@ class Sandbox
   SANDBOX_EXEC = "/usr/bin/sandbox-exec"
   private_constant :SANDBOX_EXEC
 
-  SANDBOX_DSL_RULES = [:write_to_temp, :signal].freeze
+  SANDBOX_DSL_RULES = [:write_to_temp, :signal, :network].freeze
   SANDBOX_DSL_PHASES = [:build, :postinstall, :test].freeze
 
   sig { returns(T::Boolean) }
