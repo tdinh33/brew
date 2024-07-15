@@ -86,7 +86,7 @@ module Homebrew
                 sandbox = Sandbox.new
                 f.logs.mkpath
                 sandbox.record_log(f.logs/"test.sandbox.log")
-                sandbox.allow_write_temp_and_cache(f)
+                sandbox.allow_write_temp_and_cache
                 sandbox.allow_write_log(f)
                 sandbox.allow_write_xcode
                 sandbox.allow_write_path(HOMEBREW_PREFIX/"var/cache")
@@ -94,6 +94,8 @@ module Homebrew
                 sandbox.allow_write_path(HOMEBREW_PREFIX/"var/log")
                 sandbox.allow_write_path(HOMEBREW_PREFIX/"var/run")
                 sandbox.deny_all_network_except_pipe(error_pipe) unless f.class.network_access_allowed?(:test)
+                sandbox.allow_write_global_temp if f.allowed_in_sandbox?(:write_to_temp, phase: :test)
+                sandbox.deny_signal if f.allowed_in_sandbox?(:signal, phase: :test)
                 sandbox.exec(*exec_args)
               else
                 exec(*exec_args)

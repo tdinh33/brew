@@ -1551,13 +1551,17 @@ class Formula
   # @see .disable!
   delegate disable_reason: :"self.class"
 
-  # Sandbox rules that should be skipped when installing or testing this {Formula}.
-  # Returns `nil` if there are no sandbox rules to skip.
-  # @!method reduced_sandbox
-  # @return [Array<Symbol>]
-  # @see .reduce_sandbox
-  def reduced_sandbox
-    self.class.reduced_sandbox || []
+  # Whether or not the given sandbox rule should be skipped during the given phase in this {Formula}.
+  # @!method allowed_in_sandbox?
+  # @param type [Symbol] the type of sandbox rule
+  # @param phase [Symbol] the phase to check
+  # @return [Boolean]
+  # @see .allow_in_sandbox
+  def allowed_in_sandbox?(type, phase:)
+    return false unless self.class.allowed_in_sandbox
+    return false unless self.class.allowed_in_sandbox.key?(phase)
+
+    self.class.allowed_in_sandbox[phase].include?(type)
   end
 
   sig { returns(T::Boolean) }
@@ -3287,7 +3291,7 @@ class Formula
     attr_reader :keg_only_reason
 
     # The types of sandbox restrictions that should be lifted from the formula.
-    attr_reader :reduced_sandbox
+    attr_reader :allowed_in_sandbox
 
     # A one-line description of the software. Used by users to get an overview
     # of the software and Homebrew maintainers.
@@ -4309,29 +4313,59 @@ class Formula
       link_overwrite_paths.merge(paths)
     end
 
-    # Skip certain sandbox restrictions when installing this formula.
+    # Skip certain sandbox restrictions when installing and testing this formula.
     # This can be useful if the upstream build system needs to write to
-    # locations that are protected by sandbox restrictions.
+    # locations that are protected by sandbox restrictions. Passing a
+    # phase is optional, and if not provided, the rule will be applied to
+    # all phases. The possible phases are `:build`, `:postinstall`, and `:test`.
     #
     # ### Example
     #
-    # If upstream needs to write to `/private/tmp`:
+    # If the formula needs to write to `/private/tmp` in all phases:
     #
     # ```ruby
-    # reduce_sandbox :allow_write_to_temp
+    # allow_in_sandbox! :write_to_temp
     # ```
-    def reduce_sandbox!(*types)
-      invalid_types = types.select { |type| Sandbox::SANDBOX_REDUCTIONS.exclude?(type) }
+    #
+    # If the formula needs to send signals in the `:test` phase:
+    # ```ruby
+    # allow_in_sandbox! :signal, phase: :test
+    # ```
+    #
+    # If the formula needs to write to `/private/tmp` and send signals
+    # in the `:test` and `:install` phase:
+    # ```ruby
+    # allow_in_sandbox! :write_to_temp, :signal, phase: [:test, :install]
+    # ```
+    def allow_in_sandbox!(*types, phase: nil)
+      invalid_types = types.select { |type| Sandbox::SANDBOX_DSL_RULES.exclude?(type) }
       if invalid_types.any?
         noun = if invalid_types.count > 1
           "types"
         else
           "type"
         end
-        raise ArgumentError, "Unsupported sandbox reduction #{noun}: #{invalid_types.join(", ")}"
+        raise ArgumentError, "Unsupported allow in sandbox item #{noun}: #{invalid_types.join(", ")}"
       end
 
-      @reduced_sandbox = types
+      phase ||= Sandbox::SANDBOX_DSL_PHASES
+      phases = Array(phase)
+      invalid_phases = phases.select { |p| Sandbox::SANDBOX_DSL_PHASES.exclude?(p) }
+      if invalid_phases.any?
+        noun = if invalid_phases.count > 1
+          "phases"
+        else
+          "phase"
+        end
+        raise ArgumentError, "Unsupported sandbox phase #{noun}: #{invalid_phases.join(", ")}"
+      end
+
+      @allowed_in_sandbox ||= {}
+      phases.each do |p|
+        @allowed_in_sandbox[p] ||= []
+        @allowed_in_sandbox[p].concat(types)
+        @allowed_in_sandbox[p] = @allowed_in_sandbox[p].uniq
+      end
     end
   end
 end
