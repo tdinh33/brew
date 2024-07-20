@@ -28,6 +28,23 @@ module Cask
       paths.map { |path| path.basename.to_s }
     end
 
+    sig { returns(T::Array[String]) }
+    def self.full_tokens
+      require "cask/tab"
+
+      paths.map do |path|
+        token = path.basename.to_s
+        # Cask tabs were only added on July 13, 2024 in
+        # https://github.com/Homebrew/brew/pull/17554 so
+        # they might not exist for older installs.
+        if (tab_path = path/".metadata"/AbstractTab::FILENAME).exist?
+          tap = Tab.from_file(tab_path).tap
+          token = "#{tap}/#{token}" if tap&.installed?
+        end
+        token
+      end
+    end
+
     sig { returns(T::Boolean) }
     def self.any_casks_installed?
       paths.any?
@@ -55,7 +72,7 @@ module Cask
     # @api internal
     sig { params(config: T.nilable(Config)).returns(T::Array[Cask]) }
     def self.casks(config: nil)
-      tokens.sort.filter_map do |token|
+      full_tokens.sort.filter_map do |token|
         CaskLoader.load(token, config:, warn: false)
       rescue TapCaskAmbiguityError => e
         T.must(e.loaders.first).load(config:)
