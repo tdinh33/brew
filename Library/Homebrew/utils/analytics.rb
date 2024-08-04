@@ -332,9 +332,9 @@ module Utils
 
         output_analytics(json, args:)
         output_github_packages_downloads(formula, args:)
-      rescue ArgumentError, Timeout::Error
+      rescue ArgumentError, Timeout::Error => e
         # Ignore failed/timed-out API requests
-        nil
+        odebug e
       end
 
       def cask_output(cask, args:)
@@ -347,9 +347,9 @@ module Utils
         return if json.blank? || json["analytics"].blank?
 
         output_analytics(json, args:)
-      rescue ArgumentError, Timeout::Error
+      rescue ArgumentError, Timeout::Error => e
         # Ignore failed/timed-out API requests
-        nil
+        odebug e
       end
 
       sig { returns(T::Hash[Symbol, String]) }
