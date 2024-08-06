@@ -11,9 +11,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos "apple" if build.with? "foo"
           uses_from_macos "foo" => :optional
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 5) should be put before dependency "apple" (line 4)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 6) should be put before dependency "apple" (line 5)
         end
       RUBY
 
@@ -21,7 +22,9 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos "foo" => :optional
+
           uses_from_macos "apple" if build.with? "foo"
         end
       RUBY
@@ -32,9 +35,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos "foo"
           uses_from_macos "bar"
-          ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 5) should be put before dependency "foo" (line 4)
+          ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "foo" (line 5)
         end
       RUBY
 
@@ -42,6 +46,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos "bar"
           uses_from_macos "foo"
         end
@@ -53,9 +58,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos FooRequirement
           uses_from_macos "bar"
-          ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 5) should be put before dependency "FooRequirement" (line 4)
+          ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "FooRequirement" (line 5)
         end
       RUBY
 
@@ -63,6 +69,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos "bar"
           uses_from_macos FooRequirement
         end
@@ -74,16 +81,18 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           head do
             uses_from_macos "apple" if build.with? "foo"
             uses_from_macos "bar"
-            ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 7) should be put before dependency "apple" (line 6)
             uses_from_macos "foo" => :optional
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 7) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 8) should be put before dependency "apple" (line 6)
           end
+
           uses_from_macos "apple" if build.with? "foo"
           uses_from_macos "foo" => :optional
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 10) should be put before dependency "apple" (line 9)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 12) should be put before dependency "apple" (line 11)
         end
       RUBY
 
@@ -91,12 +100,16 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           head do
             uses_from_macos "bar"
+
             uses_from_macos "foo" => :optional
             uses_from_macos "apple" if build.with? "foo"
           end
+
           uses_from_macos "foo" => :optional
+
           uses_from_macos "apple" if build.with? "foo"
         end
       RUBY
@@ -107,8 +120,11 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           uses_from_macos "bar" => [:build, :test]
+
           uses_from_macos "foo" => :build
+
           uses_from_macos "apple"
         end
       RUBY
@@ -119,12 +135,13 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           on_arm do
             uses_from_macos "apple" if build.with? "foo"
             uses_from_macos "bar"
-            ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 7) should be put before dependency "apple" (line 6)
             uses_from_macos "foo" => :optional
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 7) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 8) should be put before dependency "apple" (line 6)
           end
         end
       RUBY
@@ -133,8 +150,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           on_arm do
             uses_from_macos "bar"
+
             uses_from_macos "foo" => :optional
             uses_from_macos "apple" if build.with? "foo"
           end
@@ -149,9 +168,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on "apple" if build.with? "foo"
           depends_on "foo" => :optional
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 5) should be put before dependency "apple" (line 4)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 6) should be put before dependency "apple" (line 5)
         end
       RUBY
 
@@ -159,8 +179,32 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on "foo" => :optional
+
           depends_on "apple" if build.with? "foo"
+        end
+      RUBY
+    end
+
+    it "reports and corrects incorrectly ordered build and runtime dependencies" do
+      expect_offense(<<~RUBY)
+        class Foo < Formula
+          url "https://brew.sh/foo-1.0.tgz"
+
+          depends_on "bar"
+          depends_on "foo" => :build
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 5) should be put before dependency "bar" (line 4)
+        end
+      RUBY
+
+      expect_correction(<<~RUBY)
+        class Foo < Formula
+          url "https://brew.sh/foo-1.0.tgz"
+
+          depends_on "foo" => :build
+
+          depends_on "bar"
         end
       RUBY
     end
@@ -170,9 +214,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on "foo"
           depends_on "bar"
-          ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 5) should be put before dependency "foo" (line 4)
+          ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "foo" (line 5)
         end
       RUBY
 
@@ -180,6 +225,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on "bar"
           depends_on "foo"
         end
@@ -191,9 +237,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on FooRequirement
           depends_on "bar"
-          ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 5) should be put before dependency "FooRequirement" (line 4)
+          ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "FooRequirement" (line 5)
         end
       RUBY
 
@@ -201,6 +248,7 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on "bar"
           depends_on FooRequirement
         end
@@ -212,16 +260,18 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           head do
             depends_on "apple" if build.with? "foo"
             depends_on "bar"
-            ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 7) should be put before dependency "apple" (line 6)
             depends_on "foo" => :optional
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 7) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 8) should be put before dependency "apple" (line 6)
           end
+
           depends_on "apple" if build.with? "foo"
           depends_on "foo" => :optional
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 10) should be put before dependency "apple" (line 9)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 12) should be put before dependency "apple" (line 11)
         end
       RUBY
 
@@ -229,12 +279,16 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           head do
             depends_on "bar"
+
             depends_on "foo" => :optional
             depends_on "apple" if build.with? "foo"
           end
+
           depends_on "foo" => :optional
+
           depends_on "apple" if build.with? "foo"
         end
       RUBY
@@ -245,8 +299,11 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           depends_on "bar" => [:build, :test]
+
           depends_on "foo" => :build
+
           depends_on "apple"
         end
       RUBY
@@ -257,12 +314,13 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           on_linux do
             depends_on "apple" if build.with? "foo"
             depends_on "bar"
-            ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 6) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "bar" (line 7) should be put before dependency "apple" (line 6)
             depends_on "foo" => :optional
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 7) should be put before dependency "apple" (line 5)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ FormulaAudit/DependencyOrder: dependency "foo" (line 8) should be put before dependency "apple" (line 6)
           end
         end
       RUBY
@@ -271,8 +329,10 @@ RSpec.describe RuboCop::Cop::FormulaAudit::DependencyOrder do
         class Foo < Formula
           homepage "https://brew.sh"
           url "https://brew.sh/foo-1.0.tgz"
+
           on_linux do
             depends_on "bar"
+
             depends_on "foo" => :optional
             depends_on "apple" if build.with? "foo"
           end

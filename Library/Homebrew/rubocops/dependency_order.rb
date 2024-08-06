@@ -112,11 +112,23 @@ module RuboCop
                     "\"#{dependency_name(node_2)}\" (line #{l2})" do |corrector|
               indentation = " " * (start_column(node_2) - line_start_column(node_2))
               line_breaks = "\n"
+              # Enforce an extra blank line between different kinds of `depends_on`.
+              line_breaks += "\n" if depends_on_kind(node_1) != depends_on_kind(node_2)
               corrector.insert_before(node_2.source_range,
                                       node_1.source + line_breaks + indentation)
               corrector.remove(range_with_surrounding_space(range: node_1.source_range, side: :left))
             end
           end
+        end
+
+        def depends_on_kind(node)
+          return :buildtime if buildtime_dependency?(node)
+          return :test if test_dependency?(node)
+          return :recommended if recommended_dependency?(node)
+          return :optional if optional_dependency?(node)
+          return :negated_normal if negate_normal_dependency?(node)
+
+          :normal
         end
 
         # Node pattern method to match
